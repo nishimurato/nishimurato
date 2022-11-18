@@ -1,0 +1,695 @@
+<!doctype html>
+<html>
+  <head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-WXKRS41Q9E"></script>
+    <script>window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date());  gtag('config', 'G-WXKRS41Q9E');</script>
+    <meta charset='utf-8' />
+    <link rel="icon" type="image/png" href="../favicon.png">
+    <title>PWA Test</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.4.1/mapbox-gl.js"></script>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.4.1/mapbox-gl.css" rel="stylesheet" />
+    <!-- <script src='https://api.mapbox.com/mapbox-gl-js/v1.13.0/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v1.13.0/mapbox-gl.css' rel='stylesheet' /> -->
+  <link rel="manifest" href="manifest.json">
+    <script src="https://unpkg.com/three@0.106.2/build/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.106.2/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://unpkg.com/deck.gl@latest/dist.min.js"></script>
+    <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.0.9/mapbox-gl-draw.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.0.9/mapbox-gl-draw.css' rel='stylesheet' />
+    <script src='https://cdn.jsdelivr.net/npm/@turf/turf@5/turf.min.js'></script>
+    <script src="https://unpkg.com/threebox-plugin/dist/threebox.min.js" type="text/javascript"></script>
+    <link href="https://unpkg.com/threebox-plugin/dist/threebox.css" rel="stylesheet" />
+    <script src="//cdnjs.cloudflare.com/ajax/libs/numeral.js/2.0.6/numeral.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.bundle.min.js"></script>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.4.1/chart.min.js"></script> -->
+    <style>
+      body { margin:0; padding:0; }
+      #map { position:absolute; top:0; bottom:0; width:100%; }
+      #map canvas {cursor: crosshair;}
+      .mapboxgl-popup {max-width: 400px;font:11.0px/17.0px 'メイリオ', Meiryo, sans-serif;padding: 5px;}
+      .mapboxgl-popup-content{padding:12px 15px 7px;background-color:white;border:2px solid blue;text-align:center;}
+      input[type=radio],input[type=checkbox]{display:block;position:relative;}
+      .toggle label {display: flex;position: relative;}
+      .toggle .button,.toggle .buttonx {z-index: 1;} 
+      .toggle :checked+.button {background-color:rgba(70, 130, 180, 0.7);}
+      .toggle :checked+.buttonx {background-color:rgba(70,130,180,0.7);}
+      .toggle :disabled+.button {cursor: not-allowed;opacity: .6;color: #def;}
+      .toggle .button {width:100%;display:inline-block;border-radius:2px;text-align:left;color:white;cursor: pointer;}
+      .toggle .buttonx {width:100%;display:inline-block;border-radius:2px;text-align:left;color:white;cursor: pointer;}
+      .toggle .button:hover,.toggle .buttonx:hover {border:0.5px solid whitesmoke;}
+      .toggle .button:disabled {cursor: not-allowed;opacity: .6;color: #def;}
+      .btico2 {margin:1px -6px 0px 0px;border-radius:5px;cursor:pointer;padding:3px 3px 0px 3px;}
+      .bticon {margin:0px;border-radius:4px;cursor:pointer;}
+      button img {width: 40px;height: 40px;}
+      select {width:98%;background-color:dimgray;color:white;font:14px/14px メイリオ;}
+      table {font:12px/11px メイリオ;}
+    </style>
+  </head>
+  <body>
+    <div id="dia" style="margin-left:0px;z-index:10;position:absolute;background:rgba(48,48,48,0.9);top:0;bottom:0;width:240px;">
+      <a id="cbtn" onclick="cbtn()" style="display:block;position:absolute;right:0px;width:40px;font-size:22px;cursor:pointer;margin-right:-40px;top:1px;border-radius:0px 6px 6px 0px; background-color:gray;color:white;text-decoration:none;">＜</a>
+      <!-- <button class="btico2" onclick="extrutionOn()"><img src="img/extrutionOn.png" /></button>
+      <button class="btico2" onclick="ext2flt()">    <img src="img/ext2flt.png" /></button>
+      <button class="btico2" onclick="pitbear0()">   <img src="img/conpa.png" /></button> -->
+      <div class="toggle" id="tbl" style="color:white;font:14px/20px BIZ UDゴシック;padding:6px 0px 4px 2px;border:2px inset #777;">
+        <label><input type="checkbox" id="st1"     checked onclick="check('st1',    checked)"><span class="buttonx">mvt　国土数値-駅~2016</span></label>
+        <label><input type="checkbox" id="census"  checked onclick="check('census', checked)"><span class="buttonx">mvt　H26経済センサス小地域</span></label>
+        <label><input type="checkbox" id="chome"   checked onclick="check('chome',  checked)"><span class="buttonx">mvt　H27国勢調査小地域</span></label>
+        <label><input type="checkbox" id="100mesh"         onclick="check('100mesh',checked)"><span class="buttonx">mvt　H27簡易人口100mMesh 東京</span></label>
+        <label><input type="checkbox" id="fupop"           onclick="check('fupop',  checked)"><span class="buttonx">mvt　将来人口500mMesh 一都三県</span></label>
+        <label><input type="checkbox" id="plateau"         onclick="check('plateau',checked)"><span class="buttonx">mvt　PLATEAU 東京23区</span></label>
+        <label><input type="checkbox" id="b3dm1"           onclick="b3dm1(checked)">          <span class="buttonx">b3dm PLATEAU 千代田区</span></label>
+        <label><input type="checkbox" id="b3dm2"           onclick="b3dm2(checked)">          <span class="buttonx">b3dm PLATEAU 中央区</span></label>
+        <!-- <label><input type="checkbox" id="b3dm3"           onclick="b3dm3(checked)">          <span class="buttonx">b3dm 千葉</span></label>
+        <label><input type="checkbox" id="pnts"            onclick="pnts(checked)">           <span class="buttonx">pnts 千葉</span></label> -->
+        <label><input type="checkbox" id="kakegawajyo"     onclick="siro3dTiles(checked)">    <span class="buttonx">pnts 掛川城ポイントクラウド</span></label>
+        <label><input type="checkbox" id="model01"         onclick="check('model01',checked)">      <span class="buttonx">glTF 2014渋谷駅周辺3dcel</span></label>
+        <label><input type="checkbox" id="terrainwebp"     onclick="terrainwebp(checked)">    <span class="buttonx">TerrainRGB 標高タイル</span></label>
+        <label><input type="checkbox" id="osm"     checked onclick="check('osm',    checked)"><span class="buttonx">Open Street Map</span></label>
+        <label><input type="checkbox" id="pale"            onclick="check('pale',   checked)"><span class="buttonx">地理院地図pale</span></label>
+        <label><input type="checkbox" id="photo"           onclick="check('photo',  checked)"><span class="buttonx">地理院地図photo</span></label>
+      </div>
+      <div id="tb" border="1" style="color:white;font:14px/16px BIZ UDゴシック;width:100%;">
+        <div style="background-color:#3cb371;padding-left:2px;">経済センサス-従業者H26
+          <button class="bticon" onclick="workerbt()" style="width:25%;position:relative;left:16px;"><img src="../img/worker.png" style="height:12px;margin:0px 0px -1px -8px;"/></button>
+        </div>
+        <table id='anbox2' style="height:44px;"></table>
+        <div style="background-color:#cd5c5c;padding-left:2px;">国勢調査-人口世帯H27
+          <button class="bticon" onclick="h27popds()" style="width:25%;position:relative;left:31px;"><img src="../img/h27popds.png" style="height:12px;margin:0px 0px -1px -8px;"/></button>
+        </div>
+        <table id='anbox3' style="height:44px;"></table>
+        <div style="background-color:#6495ed;padding-left:2px;">簡易100mメッシュ人口H27
+          <button class="bticon" onclick="meshPop100()" style="width:25%;position:relative;left:9px;"><img src="../img/100meshPop.png" style="height:12px;margin:0px 0px -1px -8px;"/></button>
+        </div>
+        <table id='anbox4' style="height:58px;"></table>
+        <div style="background-color:#0cc;padding-left:2px;">500mメッシュ将来人口
+          <button class="bticon" onclick="fupopbt()" style="width:25%;position:relative;left:30px;"><img src="../img/fupop.png" style="height:12px;margin:0px 0px -1px -8px;"/></button>
+        </div>
+        <table id='anbox5' style="height:114px;"></table>
+        <div><canvas id="chart1" style="width: 100%; height:140px;"></canvas></div>
+        <div style="background-color:#00f;padding-left:2px;">国土数値情報-駅乗降数
+          <button class="bticon" onclick="stationbt()" style="width:25%;position:relative;left:23px;"><img src="../img/station.png" style="height:12px;margin:0px 0px -1px -8px;"/></button>
+        </div>
+        <table id='anbox1' style="height:114px;"></table>
+      </div>
+      </table>
+      <hr>
+      <div style="color:#fff;border:1px inset;">住所検索<input onchange="addserch(value)" type="text" style="width:96%;">
+        <select id="serchlist" onclick="serchlist()" size="10" style="width:98%;font-size:11px;margin:0px 0px 3px 2px;"></select>
+      </div>
+    </div>
+    <div id='map'></div>
+    <div id="mousexy" style="position:absolute;z-index:100;bottom:6px;right:8px;font:16px/26px メイリオ;background-color:#fff;border:1px solid;padding:5px 11px;"></div>
+    <script>
+      mapboxgl.accessToken = 'pk.eyJ1IjoibmlzaGltdXJhdG8iLCJhIjoiY2ttOW4wb2kyMWpldDJ1cDE1ZThuMndxdSJ9._RCu25Ad4ofTd-ULpKgbew';
+      var map = new mapboxgl.Map({container:'map',center:[139.700,35.680],zoom:10,hash:true,preserveDrawingBuffer:true,localIdeographFontFamily: ['sans-serif'],
+      style:{"version": 8,
+             "glyphs": "./fonts/{fontstack}/{range}.pbf",
+             "sources": {"pale": {"type": "raster","tileSize":256,"maxzoom":18,"tiles": ["https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png"]},
+                         "osm"  :{"type": "raster","maxzoom":19,"tileSize":256,"tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"]},
+                         "photo":{"type": "raster","maxzoom":18,"tileSize":256,"tiles": ["https://maps.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg"]},
+                         "chome"   :{"type":"vector","maxzoom":12,"tiles":["https://asl-gis1.azurewebsites.net/mvt/chome/{z}/{x}/{y}.mvt"]},
+                         "census"  :{"type":"vector","maxzoom":12,"tiles":["https://asl-gis1.azurewebsites.net/mvt/census/{z}/{x}/{y}.mvt"]},
+                         "100mesh" :{"type":"vector","maxzoom":10,"tiles":["https://asl-gis1.azurewebsites.net/mvt/100mesh/{z}/{x}/{y}.mvt"]},
+                         "fupop"   :{"type":"vector","maxzoom": 9,"tiles":["https://asl-gis1.azurewebsites.net/mvt/fupop/{z}/{x}/{y}.mvt"]},
+                         "st1"     :{"type":"vector","maxzoom":11,"tiles":["https://asl-gis1.azurewebsites.net/mvt/Station/{z}/{x}/{y}.mvt"]},
+                         "mituExt" :{"type":"vector","maxzoom":12,"tiles":["https://asl-gis1.azurewebsites.net/mvt/chome/{z}/{x}/{y}.mvt"]},
+                         "plateau" :{"type":"vector","maxzoom":16,"tiles":["https://indigo-lab.github.io/plateau-tokyo23ku-building-mvt-2020/{z}/{x}/{y}.pbf"]},
+                         "hakone"  :{"type":"vector","maxzoom":16,"tiles":["https://asl-gis1.azurewebsites.net/mvt/PLATEAU/{z}/{x}/{y}.mvt"]},
+                         "pic"     :{"type":"geojson","data": {"type":"FeatureCollection","features": []}},
+                         "pic1"    :{"type":"geojson","data": {"type":"FeatureCollection","features": []}},
+                         "pic2"    :{"type":"geojson","data": {"type":"FeatureCollection","features": []}},
+                         "pic3"    :{"type":"geojson","data": {"type":"FeatureCollection","features": []}},
+                         "pic4"    :{"type":"geojson","data": {"type":"FeatureCollection","features": []}},
+                         "pic5"    :{"type":"geojson","data": {"type":"FeatureCollection","features": []}},
+                         "marul"   :{"type":"geojson","data": {"type":"FeatureCollection","features": []}},
+                         "megane"  :{"type":"geojson","data": {"type":"FeatureCollection","features": []}},
+                         "ritutext":{"type":"geojson","data": {"type":"FeatureCollection","features": []}},
+                         "sikatext":{"type":"geojson","data": {"type":"FeatureCollection","features": []}},
+                         "kyoritext1":{"type":"geojson","data": {"type":"FeatureCollection","features": []}},
+                         "kyoritext2":{"type":"geojson","data": {"type":"FeatureCollection","features": []}},
+                         "mapboxdem":{type:"raster-dem",'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',tileSize:512,maxzoom:14},
+                         "tiriindem":{type:"raster-dem",tiles:["https://asl-gis1.azurewebsites.net/mvt/tiriindem/{z}/{x}/{y}.webp"],tileSize:512,maxzoom:12,minzoom:3} //地理院10mMesh標高
+                        //  "dsmpng":{type:"raster-dem",tiles:["https://asl-node1.azurewebsites.net/91dem/{z}/{x}/{y}.png"],tileSize:256,maxzoom:18,minzoom:1},
+                         },
+      "layers": [
+      {"id":"osm","type":"raster","source":"osm","paint":{"raster-opacity":1.0}},
+      {"id":"pale","type":"raster","source":"pale","paint":{"raster-opacity":1.0},"layout":{"visibility":"none"}},
+      {"id":"photo","type":"raster","source":"photo","paint":{"raster-opacity":1.0},"layout":{"visibility":"none"}},
+      {"id":"chome","type":"fill","source":"chome","source-layer":"chome","paint":{"fill-opacity":0.01,"fill-outline-color":"#aaaaaa","fill-color": ['interpolate',['linear'],['get', 'mitudo'],0,'#ffeeee',500,'#ffcccc',5000,'#ff9999',10000,'#ff6666',15000,'#ff3333',20000,'#ff0000']}},
+      {"id":"census","type":"fill","source":"census","source-layer":"census","paint":{"fill-opacity":0.01,"fill-outline-color":"#aaaaaa","fill-color": ['interpolate',['linear'],['get', 'JUGYOSHA'],0,'#eeffee',500,'#ccffcc',5000,'#99ff99',10000,'#66ff66',15000,'#33ff33',20000,'#00ff00']}},
+      {"id":"100mesh","type":"fill","source":"100mesh","source-layer":"100mesh","layout":{"visibility":"none"},"paint":{"fill-opacity":0.05,"fill-outline-color":"#0000ff","fill-color":"#ffffff"}},
+      {"id":"fupop","type":"fill","source":"fupop","source-layer":"fupop","layout":{"visibility":"none"},"paint":{"fill-opacity":0.1,"fill-outline-color":"#0000ff","fill-color":"#ffffff"}},
+      {"id":"st1","type":"line","source":"st1","source-layer":"station","minzoom":8,"paint":{"line-color":"#000888","line-opacity":0.7,"line-width":['interpolate',['linear'],['get', '乗降客数18'],0,4,90000,12]}},
+      {"id":"sensusExt","type":"fill-extrusion","source":"census","source-layer":"census","layout":{"visibility":"none"},"paint":{"fill-extrusion-color":{"property":"JUGYOSHA","stops": [[1,"#ffffff"],[1000,"#cccc55"],[10000,"#dda522"],[20000,"#ee2222"],[30000,"#ff1111"]]},"fill-extrusion-height":{"property":"JUGYOSHA", "stops":[[1,0],[1000,1000],[10000,3000],[25000,6000],[40000,12000]]},"fill-extrusion-opacity":0.9,"fill-extrusion-base": 0}},
+      {"id":"mituExt","type":"fill-extrusion","source":"mituExt","source-layer":"chome","layout":{"visibility":"none"},"paint":{"fill-extrusion-color":{"property":"mitudo","stops": [[1,"#ffffff"],[1000,"#cccc55"],[10000,"#dda522"],[20000,"#ee2222"],[30000,"#ff1111"]]},"fill-extrusion-height":{"property":"mitudo", "stops":[[1,0],[1000,1000],[10000,3000],[25000,6000],[40000,12000]]},"fill-extrusion-opacity":0.9,"fill-extrusion-base": 0}},
+      {"id":"meshExt","type":"fill-extrusion","source":"100mesh","source-layer":"100mesh","layout":{"visibility":"none"},"paint":{"fill-extrusion-color":{"property":"PopT","stops": [[1,"white"], [150,"orange"], [300,"firebrick"]]},"fill-extrusion-height":{"property":"PopT", "stops":[[1,0],[300,500], [600,1000]]},"fill-extrusion-opacity":0.9,"fill-extrusion-base": 0}},
+      {"id":"fupopExt","type":"fill-extrusion","source":"fupop","source-layer":"fupop","layout":{"visibility":"none"},"paint":{"fill-extrusion-color": ['interpolate',['linear'],["*",["/",['get','PTN_2050'],['get','PTN_2015']],100],20,'#2222dd',100,'#eeeeee',140,'#dd2222'],"fill-extrusion-height":['interpolate',['linear'],["*",["/",['get','PTN_2050'],['get','PTN_2015']],100],20,0,100,1000,140,2000],"fill-extrusion-opacity":0.7,"fill-extrusion-base": 0}},
+      {"id":"st1Ext","type":"fill-extrusion","source":"st1","source-layer":"station","layout":{"visibility":"none"},"paint":{"fill-extrusion-color":"#00f","fill-extrusion-height":{"property":"乗降客数18", "stops":[[1,0],[10000,1000], [200000,30000]]},"fill-extrusion-opacity":0.9,"fill-extrusion-base": 0}},
+      {"id":"plateau","type":"fill-extrusion","source":"plateau","source-layer":"bldg","minzoom":10,"layout":{"visibility":"none"},"paint": {"fill-extrusion-color":['interpolate',['linear'],['get', 'measuredHeight'],0,"#ccf",100,"#66f",200,"#d06",300,"#d03"],"fill-extrusion-height": ["get", "measuredHeight"]}},
+      {"id":"plateau1","type":"fill-extrusion","source":"hakone","source-layer":"plateau","minzoom":10,"layout":{"visibility":"none"},"paint": {"fill-extrusion-color":['interpolate',['linear'],['get', 'measuredHeight'],0,"#ccf",100,"#66f",200,"#d06",300,"#d03"],"fill-extrusion-height": ["get", "measuredHeight"]}},
+//"fill-extrusion-color": ['case',['boolean', ['feature-state', 'hover'], false],"#ff8c00", "#008000"]
+      {"id":"pic","type":"fill","source":"pic","paint":{"fill-opacity":0.1,"fill-outline-color":"#000","fill-color": ['interpolate',['linear'],['get', 'number'],0,'#002200',10,'#008888',30,'#5500ff']}},
+      {"id":"pic1","type":"fill","source":"pic1","paint":{"fill-opacity":0.1,"fill-outline-color":"#000","fill-color": "#cd5c5c"}},
+      {"id":"pic2","type":"fill","source":"pic2","paint":{"fill-opacity":0.1,"fill-outline-color":"#000","fill-color": "#3cB371"}},
+      {"id":"pic3","type":"line","source":"pic3","paint":{"line-opacity":0.1,"line-width":6,"line-color": "#f00"}},
+      {"id":"pic4","type":"line","source":"pic4","paint":{"line-opacity":0.1,"line-width":4,"line-color": "#00f"}},
+      {"id":"pic5","type":"line","source":"pic5","paint":{"line-opacity":0.1,"line-width":4,"line-color": "#0ff"}},
+      {"id":"marul","type":"line","source":"pic","paint":{"line-color":"orange","line-width":4,"line-opacity":0.8}},
+      {"id":"megane","type":"symbol","source":"pic","layout":{"icon-image":"megane","icon-size":0.6,"icon-padding":2.0}},
+      {"id":"ritutext","type":"symbol","source":"ritutext","paint":{'text-color':'#000377','text-halo-color': 'hsl(0, 0%, 100%)','text-halo-width': 2},"layout":{"text-field":"{label}", "text-size":16,"text-offset": [0, 0.6],"text-anchor":"top","text-font": ["OpenSansSemibold"]}},
+      {"id":"sikatext","type":"symbol","source":"sikatext","paint":{'text-color':'#772200','text-halo-color': 'hsl(0, 0%, 100%)','text-halo-width': 2,'text-opacity':1.0},"layout":{"text-field":"{label}", "text-size":16,"text-offset": [0, 0.8],"text-anchor":"top","text-font": ["Noto Sans CJK JP Regular"]}},
+      {"id":"kyoritext1","type":"symbol","source":"kyoritext1","paint":{'text-color':'#ff1100','text-halo-color': 'hsl(0, 0%, 100%)','text-halo-width': 2},"layout":{"text-field":"{label}", "text-size":16,"text-offset": [0, 0.6],"text-anchor":"center","text-font": ["OpenSansSemibold"]}},
+      {"id":"kyoritext2","type":"symbol","source":"kyoritext2","paint":{'text-color':'#772200','text-halo-color': 'hsl(0, 0%, 100%)','text-halo-width': 2},"layout":{"text-field":"{label}", "text-size":16,"text-offset": [0, 0.6],"text-anchor":"center","text-font": ["OpenSansSemibold"]}}
+      ]}});
+
+      var scale = new mapboxgl.ScaleControl({maxWidth:150});  map.addControl(scale,'top-right');
+      map.addControl(new mapboxgl.NavigationControl());
+      map.addControl(new mapboxgl.FullscreenControl());
+      map.addControl(new mapboxgl.GeolocateControl({positionOptions: {enableHighAccuracy: true},trackUserLocation: false,showUserLocation:true}));
+
+      if (window.ontouchstart !== null){map.on('mousemove',mousexy)}else{map.on('touchstart',mousexy)}
+      function mousexy(e){
+        // var p=proj4("EPSG:4326","EPSG:6677",[e.lngLat.lng,e.lngLat.lat]); //WGS⇒平面直角座標Ⅸ系
+        // document.getElementById("mousexy").innerHTML="X="+p[1].toLocaleString(undefined, {minimumFractionDigits:3,maximumFractionDigits:3})+"　Y= "+p[0].toLocaleString(undefined, {minimumFractionDigits:3,maximumFractionDigits:3});
+        document.getElementById("mousexy").innerHTML=e.lngLat.lng.toLocaleString(undefined, {minimumFractionDigits:7,maximumFractionDigits:7})+" "+e.lngLat.lat.toLocaleString(undefined, {minimumFractionDigits:7,maximumFractionDigits:7});
+      }
+
+      function check(layid,onof){
+        if(onof){var val='visible'}else{var val='none'};
+        map.setLayoutProperty(layid, 'visibility',val);
+        if(layid=="model01" && onof==true){map.jumpTo({center:[139.70103,35.65845],zoom:16.5})}
+      };
+
+      //https://cyberjapandata2.gsi.go.jp/general/dem/scripts/getelevation.php?lon=140.08531&lat=36.103543&outtype=JSON
+      function b3dm1(onof){
+        if(onof){
+          map.jumpTo({center:[139.7633,35.6839],zoom:15.8,pitch:60})
+          map.addLayer(new deck.MapboxLayer({id:"b3dm1",type:deck.Tile3DLayer,data:"./b3dm/chiyoda/tileset.json",opacity:1}))
+			  }else{if (map.getLayer("b3dm1")){map.removeLayer("b3dm1")}};
+      };
+      function b3dm2(onof){
+        if(onof){
+          map.jumpTo({center:[139.7680,35.6809],zoom:15.8,pitch:60})
+          map.addLayer(new deck.MapboxLayer({id:"b3dm2",type:deck.Tile3DLayer,data:"./b3dm/chuo-ku/tileset.json",opacity:1}))
+			  }else{if (map.getLayer("b3dm2")){map.removeLayer("b3dm2")}};
+      };
+      function b3dm3(onof){
+        if(onof){
+          //map.jumpTo({center:[139.5180,35.622772],pitch:0})
+          map.addLayer(new deck.MapboxLayer({id:"b3dm3",type:deck.Tile3DLayer,data:"./3dtiles/yomi/tileset.json",opacity:1}))
+			  }else{if (map.getLayer("b3dm3")){map.removeLayer("b3dm3")}};
+      };
+      function pnts(onof){
+        if(onof){
+          //pass=prompt("パスワードを入力してください。")
+          //map.jumpTo({center:[140.372433,35.64123],pitch:75})
+          map.addLayer(new deck.MapboxLayer({id:"pnts",pointSize:1,radiusMinPixels:0.1,type:deck.Tile3DLayer,data:"./3dtiles/tiba3new/tileset.json",
+          //     onTileLoad:(th)=>{th.content.cartographicOrigin.z=th.content.cartographicOrigin.z-30},
+               getPosition: (d) => [d[0], d[1], 100],
+               parameters: {depthRange:[0.01,0.01]}
+              }),)
+    	  }else{if (map.getLayer("pnts")){map.removeLayer("pnts")}};
+      };
+      function siro3dTiles(onof){
+        if(onof){
+          map.jumpTo({center:[138.01394,34.77540],zoom:19,pitch:60});
+          check("100mesh",false); document.getElementById("100mesh").checked=false
+          check("fupop",false);   document.getElementById("fupop").checked=false
+					map.addLayer(new deck.MapboxLayer({id:"kakegawa3d",pointSize:1.0,radiusMinPixels:1,type:deck.Tile3DLayer,data:"https://storageaccountaslclb395.blob.core.windows.net/asl3d/kakegawa/tileset.json",
+              onTileLoad:(th)=>{th.content.cartographicOrigin.z=th.content.cartographicOrigin.z-30}}),)
+//          map.addLayer(new deck.MapboxLayer({id:"kakegawa3d",type:deck.Tile3DLayer,data:"./image/pnts2/tileset.json"}),)
+        }else{
+					if (map.getLayer("kakegawa3d")){map.jumpTo({pitch:0,bearing:0}); map.removeLayer("kakegawa3d")};
+				}
+			};
+      map.on('style.load',()=>{
+        window.tb=new Threebox(map,map.getCanvas().getContext('webgl'),{defaultLights: true});
+        map.addLayer({id:'model01',type:'custom',renderingMode:'3d',
+          onAdd:(map, mbxContext)=> {
+            //tb.add(tb.line({geometry:[[130.129707,32.4991634,500+103*hh],[130.1550742,32.4847244,0+103*hh],[130.1619662,32.4806617,0+103*hh],[130.1867638,32.4655981,500+103*hh]],color:"#29f",width:8,opacity:0.8}))
+            tb.loadObj({obj:'https://storageaccountaslclb395.blob.core.windows.net/asl3d/shibuyaM.glb',type:'gltf',scale:1,units:'meters',rotation:{x:0,y:0,z:180}},(m)=>{tb.add(m.setCoords([139.698,35.6552,-70])) })
+          },  //glTF/shibuyaS.glb
+          render:(gl, matrix)=>{tb.update()}
+        });
+      })
+
+      // map.addLayer({id:'yomi02',type:'custom',renderingMode:'3d',onAdd:(map, mbxContext)=> {
+      //   tb.loadObj({obj:'https://storageaccountaslclb395.blob.core.windows.net/asl3d/LD324-1down.glb',type:'gltf',scale:1,units:'meters',rotation:{x:90,y:180,z:0}},(m)=>{tb.add(m.setCoords([139.51464,35.6212,-60]))})},render:(gl, matrix)=>{tb.update()}})
+
+      // function shibuya3dx(onof){
+      //   if(onof){
+      //     map.flyTo({center:[139.7006,35.6575],zoom:15.8,pitch:60})
+      //     var mXYZ1=mapboxgl.MercatorCoordinate.fromLngLat([139.8342,35.9999],-20); //Shibuya 139.702,35.658 zushi 139.56665,35.3151
+      //     var tr1={mx:mXYZ1.x,my:mXYZ1.y,mz:mXYZ1.z,rotateX:0,rotateY:0,rotateZ:0,scale:mXYZ1.meterInMercatorCoordinateUnits()/1};
+      //     map.addLayer({id:'model01',type:'custom',renderingMode:'3d',
+      //       onAdd: function (map, gl) {
+      //         this.camera = new THREE.Camera();
+      //         this.scene = new THREE.Scene();
+      //         var directionalLight = new THREE.DirectionalLight(0xffffff,3);
+      //         directionalLight.position.set(0, 1,0).normalize();
+      //         this.scene.add(directionalLight);
+      //         var directionalLight2 = new THREE.DirectionalLight(0xffffff,3);
+      //         directionalLight2.position.set(0,1,0).normalize();
+      //         this.scene.add(directionalLight2);
+
+      //         var loader = new THREE.GLTFLoader();
+      //         loader.load('glTF/shibuyaS.glb', function (gltf) {
+      //           this.scene.add(gltf.scene)}.bind(this));
+      //         this.map = map;
+
+      //         this.renderer = new THREE.WebGLRenderer({ canvas: map.getCanvas(), context: gl, antialias: true });
+      //         this.renderer.autoClear = false;
+      //       },
+      //       render: function (gl, matrix) {
+      //         var rotationX = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0),tr1.rotateX);
+      //         var rotationY = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(0, 1, 0),tr1.rotateY);
+      //         var rotationZ = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(0, 0, 1),tr1.rotateZ);
+
+      //         var m = new THREE.Matrix4().fromArray(matrix);
+      //         var l = new THREE.Matrix4().makeTranslation(tr1.mx,tr1.my,tr1.mz)
+      //           .scale(new THREE.Vector3(tr1.scale,-tr1.scale,tr1.scale))
+      //           .multiply(rotationX).multiply(rotationY).multiply(rotationZ);
+      //         this.camera.projectionMatrix = m.multiply(l);
+      //         this.renderer.state.reset();
+      //         this.renderer.render(this.scene, this.camera);
+      //         this.map.triggerRepaint();
+      //       }
+      //     })
+      //   }else{map.jumpTo({pitch:0,bearing:0}); map.removeLayer("model01")}
+      // }
+
+      function terrainwebp(onof) {
+        if(onof){
+          map.flyTo({pitch:75}); 
+          map.setTerrain({'source':'mapboxdem','exaggeration':1.5}) //tiriindem mapboxdem
+        }else{map.flyTo({pitch:0}); map.setTerrain()};
+      };
+      // function ext2flt() {
+      // };
+      // function pitbear0() {map.setBearing(0); map.setPitch(0)};
+
+      //var aza=[]; fetch('xyz/2019aza.txt').then(res=>res.text().then(d=>{e=d.split("\n"); for(i in e){aza.push(e[i].split(","))}  }));
+      function addserch(key) {
+        var select = document.getElementById("serchlist");
+        while (select.childNodes.length > 0) {select.removeChild(select.lastChild)};
+        if(key!=""){  //server1.js
+          fetch("https://asl-node.azurewebsites.net?addserch,"+encodeURIComponent(key)).then(res=>res.text())
+          .then(d=>{
+            var op = document.createElement('option');
+            switch (d.split(",")[0]) {
+              case "zero": op.innerText="0件"; op.value=""; break;
+              case "over": op.innerText="対象が多い "+d.split(",")[1]; op.value=""; break;
+              case "ok":            
+                  var aza=JSON.parse(d.slice(d.indexOf("[")));
+                  for(i in aza){
+                      op.innerText=aza[i][0]+" "+aza[i][1];
+                      op.value=aza[i][2]+","+aza[i][3];
+                      select.appendChild(op);
+                      op = document.createElement('option');
+                  }
+            }
+            select.appendChild(op);
+          })
+          // fetch("https://asl-gis1.azurewebsites.net?addserch,"+encodeURIComponent(key)).then(res=>res.text())
+          // .then(d=>{console.log(d)
+          //   var data=d.split(/<address>|<\/address>|<longitude>|<\/longitude>|<latitude>|<\/latitude>/);
+          //   if(data.length==1) return;
+          //   for(var i=1;  i<data.length; i=i+6){
+          //     var op = document.createElement('option');
+          //     op.innerText=data[i];
+          //     op.value=data[i+2]+","+data[i+4];
+          //     select.appendChild(op);
+          //   }
+          // })
+      }}
+      function serchlist(){
+        map.jumpTo({center:document.getElementById("serchlist").value.split(",")})
+      }
+
+      function cbtn() {
+        if(document.getElementById("cbtn").innerHTML=="＜"){var marg="-240px",inner="＞"}
+        else{var marg="-0px",inner="＜"}
+        document.getElementById("dia").style.marginLeft=marg;
+        document.getElementById("cbtn").innerHTML=inner;
+      };
+      function workerbt() {
+        if(map.getPitch()==0){var visi="visible",pit=60}else{var visi="none",pit=0}
+        map.setLayoutProperty("sensusExt","visibility",visi);
+        map.flyTo({pitch:pit}); 
+      };
+      function h27popds() {
+        if(map.getPitch()==0){var visi="visible",pit=60}else{var visi="none",pit=0}
+        map.setLayoutProperty("mituExt","visibility",visi);
+        map.flyTo({pitch:pit}); 
+      };
+      function meshPop100() {
+        if(map.getPitch()==0){var visi="visible",pit=60}else{var visi="none",pit=0}
+        map.setLayoutProperty("meshExt","visibility",visi);
+        map.flyTo({pitch:pit}); 
+      };
+      function fupopbt() {
+        if(map.getPitch()==0){var visi="visible",pit=60}else{var visi="none",pit=0}
+        map.setLayoutProperty("fupopExt","visibility",visi);
+        map.flyTo({pitch:pit,zoom:11}); 
+      };
+      function stationbt() {
+        if(map.getPitch()==0){var visi="visible",pit=60}else{var visi="none",pit=0}
+        map.setLayoutProperty("st1Ext","visibility",visi);
+        map.flyTo({pitch:pit}); 
+      };
+
+      var popup1=0,popup2=0;
+      //================================================================
+
+      map.on('mousemove','st1',function(e) {
+        var x=e.features[0].properties;
+        document.getElementById("anbox1").innerHTML=
+        "<tr><td colspan='2'>【駅名】"+x.駅名+"</td></tr>"+
+        "<tr><td colspan='2'>【路線】"+x.運営会社+x.路線名+"</td></tr>"+
+        "<tr><td style='width:59%;'>【2013】"+x.乗降客数14+"人</td><td>【増減】"+Math.round(x.乗降客数14/x.乗降客数18*100)+"%</td></tr>"+
+        "<tr><td style='width:59%;'>【2014】"+x.乗降客数15+"人</td><td>【増減】"+Math.round(x.乗降客数15/x.乗降客数18*100)+"%</td></tr>"+
+        "<tr><td style='width:59%;'>【2015】"+x.乗降客数16+"人</td><td>【増減】"+Math.round(x.乗降客数16/x.乗降客数18*100)+"%</td></tr>"+
+        "<tr><td style='width:59%;'>【2016】"+x.乗降客数17+"人</td><td>【増減】"+Math.round(x.乗降客数17/x.乗降客数18*100)+"%</td></tr>"+
+        "<tr><td style='width:59%;'>【2017】"+x.乗降客数18+"人</td><td>【増減】"+Math.round(x.乗降客数18/x.乗降客数18*100)+"%</td></tr>"+
+        "<tr><td style='width:59%;color:#ff0;'>【2018】"+x.乗降客数18+"人</td><td>【基準】"+Math.round(x.乗降客数18/x.乗降客数18*100)+"%</td></tr>"
+        map.getSource('pic3').setData(e.features[0].geometry);
+      });
+      map.on('mousemove','census',function(e) {var x=e.features[0].properties;
+        document.getElementById("anbox2").innerHTML=
+        "<tr><td colspan='2'>【住所】"+x.PREF_NAME+x.CITY_NAME+x.S_NAME+"</td></tr>"+
+        "<tr><td style='width:50%;color:#ff0;'>【従業者】"+x.JUGYOSHA+"人</td><td>【面積】"+numeral(x.AREA/1000000).format('0.00')+"km2</td></tr>"+
+        "<tr><td style='width:50%;'>【事業所】"+x.JIGYOSHO+"</td></tr>"
+        map.getSource('pic2').setData(e.features[0].geometry);
+      });
+      map.on('mousemove','chome',function(e) {
+        var x=e.features[0].properties;
+        document.getElementById("anbox3").innerHTML=
+        "<tr><td colspan='2'>【住所】"+x.PREF_NAME+x.CITY_NAME+x.S_NAME+"</td></tr>"+
+        "<tr><td style='width:50%;color:#ff0;'>【人口】"+x.JINKO+"人</td><td>【面積】"+numeral(x.AREA/1000000).format('0.000')+"km2</td></tr>"+
+        "<tr><td style='width:50%;'>【世帯】"+x.SETAI+"</td><td>【人口密度】"+x.mitudo+"</td></tr>";
+        map.getSource('pic1').setData(e.features[0].geometry);
+      });
+      map.on('mousemove','100mesh',function(e) {
+        var x=e.features[0].properties;
+        document.getElementById("anbox4").innerHTML=
+        "<tr><td style='color:#ff0;'>【 人 口 】"+Math.round(x.PopT)+"人</td></tr>"+
+        "<tr><td style='width:60%;'>【  0~14】"+Math.round(x.PopT0_14)+"人</td><td>【比率】"+Math.round(x.PopT0_14/x.PopT*100)+"%</td></tr>"+
+        "<tr><td style='width:60%;'>【15~64】"+Math.round(x.PopT15_64)+"人</td><td>【比率】"+Math.round(x.PopT15_64/x.PopT*100)+"%</td></tr>"+
+        "<tr><td style='width:60%;'>【65~　 】"+Math.round(x.PopT65_)+"人</td><td>【比率】"+Math.round(x.PopT65_/x.PopT*100)+"%</td></tr>"
+        map.getSource('pic4').setData(e.features[0].geometry);
+      });
+      map.on('mousemove','fupop',function(e) {
+        var x=e.features[0].properties;
+        document.getElementById("anbox5").innerHTML=
+        "<tr><td style='width:57%;'>【2015】"+Math.round(x.PTN_2015)+"人</td><td>【基準】"+Math.round(x.PTN_2015/x.PTN_2015*100)+"%</td></tr>"+
+        "<tr><td style='width:57%;'>【2020】"+Math.round(x.PTN_2020)+"人</td><td>【増減】"+Math.round(x.PTN_2020/x.PTN_2015*100)+"%</td></tr>"+
+        "<tr><td style='width:57%;'>【2025】"+Math.round(x.PTN_2025)+"人</td><td>【増減】"+Math.round(x.PTN_2025/x.PTN_2015*100)+"%</td></tr>"+
+        "<tr><td style='width:57%;'>【2030】"+Math.round(x.PTN_2030)+"人</td><td>【増減】"+Math.round(x.PTN_2030/x.PTN_2015*100)+"%</td></tr>"+
+        "<tr><td style='width:57%;'>【2035】"+Math.round(x.PTN_2035)+"人</td><td>【増減】"+Math.round(x.PTN_2035/x.PTN_2015*100)+"%</td></tr>"+
+        "<tr><td style='width:57%;'>【2040】"+Math.round(x.PTN_2040)+"人</td><td>【増減】"+Math.round(x.PTN_2040/x.PTN_2015*100)+"%</td></tr>"+
+        "<tr><td style='width:57%;'>【2045】"+Math.round(x.PTN_2045)+"人</td><td>【増減】"+Math.round(x.PTN_2045/x.PTN_2015*100)+"%</td></tr>"+
+        "<tr><td style='width:57%;'>【2050】"+Math.round(x.PTN_2050)+"人</td><td style='color:#ff0;'>【増減】"+Math.round(x.PTN_2050/x.PTN_2015*100)+"%</td></tr>";
+        map.getSource('pic5').setData(e.features[0].geometry);
+
+        Chart.defaults.global.defaultFontColor='white';
+        Chart.defaults.global.animation.duration=100;
+        var ctx = document.getElementById("chart1").getContext("2d");
+        var myChart=new Chart(ctx, {
+          type: 'bar',
+          data: {labels: ["2015","2020","2025","2030","2035","2040","2045","2050"],
+                 datasets: [
+                   {type:'line',label:'増減率(%)',backgroundColor:'#ffaaaa',borderColor:'#ffaaaa',yAxisID:'y2',fill:false,
+                    data:[Math.round(x.PTN_2015/x.PTN_2015*100),Math.round(x.PTN_2020/x.PTN_2015*100),
+                          Math.round(x.PTN_2025/x.PTN_2015*100),Math.round(x.PTN_2030/x.PTN_2015*100),
+                          Math.round(x.PTN_2035/x.PTN_2015*100),Math.round(x.PTN_2040/x.PTN_2015*100),
+                          Math.round(x.PTN_2045/x.PTN_2015*100),Math.round(x.PTN_2050/x.PTN_2015*100)]},
+                   {type:'bar',label:'将来人口',backgroundColor:'#00cccc',yAxisID:'y1',
+                    data:[Math.round(x.PTN_2015),Math.round(x.PTN_2020),Math.round(x.PTN_2025),Math.round(x.PTN_2030),
+                          Math.round(x.PTN_2035),Math.round(x.PTN_2040),Math.round(x.PTN_2045),Math.round(x.PTN_2050)]},
+                  ]
+          },
+          options: {events:['click'],scales:{
+            yAxes: [{type:'linear',display:true,position:'left',id:'y1',fontColor:'#ffaaaa',ticks: {beginAtZero:false},gridLines:{color:'#5aa'}},
+                    {type:'linear',display:true,position:'right',id:'y2',ticks: {beginAtZero:false},gridLines:{color:'#eaa'}}]
+            }}
+        });
+      });
+      //var addrdb;fetch('xyz/addr.geojson').then(res=>res.json().then(d=>{addrdb=d}));
+      // function prefchange(){
+      //   var obj = document.getElementById("pref");
+      //   var select = document.getElementById("city");
+      //   while (select.childNodes.length > 1) {select.removeChild(select.lastChild)};
+      //   for(var i in addrdb.features){
+      //     if(addrdb.features[i].properties.cd.indexOf(obj.value)==0){
+      //       var op=document.createElement('option'); 
+      //       var tt=addrdb.features[i].properties.addr;  //市区町村名で都道府県名をカット
+      //       if(tt.indexOf(obj.options[obj.selectedIndex].text)==0){tt=tt.slice(obj.options[obj.selectedIndex].text.length)}
+      //       op.innerText=tt;
+      //       op.value=addrdb.features[i].properties.cd;
+      //       select.appendChild(op);
+      //     }
+      //   }
+      // }
+      // function citychange(){
+      //   var value = document.getElementById("city").value;
+      //   fetch("https://asl-node.azurewebsites.net?atr,"+value).then(res=>res.json()).then(atr=>{
+      //       var select = document.getElementById("sname");
+      //       while (select.childNodes.length > 1) {select.removeChild(select.lastChild)};
+      //       for(var i=0; i<atr.length; i++){
+      //         var op = document.createElement('option');
+      //         op.innerText=atr[i].sname;
+      //         op.value=atr[i].id;
+      //         select.appendChild(op);
+      //       }
+      //   })
+      // };
+      // function snamechange(){
+      //   var value = document.getElementById("sname").value;
+      //   fetch("https://asl-node.azurewebsites.net?id,"+value).then(res=>res.json()).then(a=>{
+      //       var qpol=[],ret=[];
+      //       qpol.push({type: 'Feature',geometry: {type: 'Polygon',coordinates:[ret],}});
+      //       for(var i=0; i<a[0].geometry[0].length; i++) {ret.push([a[0].geometry[0][i].x,a[0].geometry[0][i].y])};
+      //       map.flyTo({center:turf.centroid(qpol[0]).geometry.coordinates});
+      //       map.getSource('pic').setData({type:"FeatureCollection",features:qpol});
+      //   })
+      // };
+
+      function getjinko(coord,r,poly){
+        var csvdata=[],csvd1=[],csvd2=[],csvd3=[];
+        var xhr = new XMLHttpRequest();    // para:centerPoint&r minarea seek ?
+        xhr.open('GET',"https://asl-node.azurewebsites.net?buf,"+coord[0]+','+coord[1]+','+r/100000, true);
+        xhr.onreadystatechange=function(){
+          if (xhr.readyState === 4 && xhr.status === 200){
+            var qbox=JSON.parse(xhr.responseText);
+            var qpol=[];
+            for(i=0; i<qbox.length; i++){
+              var ret=[];
+              qpol.push({type: 'Feature',geometry: {type: 'Polygon',coordinates:[ret],}});
+              for(j=0; j<qbox[i].geometry[0].length; j++) {ret.push([qbox[i].geometry[0][j].x,qbox[i].geometry[0][j].y])};
+            }
+            var targets=[],labe=[],sumj=0,sums=0,maru,citycd=[],citynm=[];
+            csvd1=['\n\n【町丁字境界】','pref','gstname','city','sname','夜間人口','割合','人口×割合','【経済センサス基礎調査】',
+                        "従業者総数","農林漁業","鉱業採石業","建設業","製造業","電気ｶﾞｽ熱水道","情報通信業","運輸業","卸売業小売業","金融業保険業","不動産業","学術研究","宿泊飲食ｻｰﾋﾞｽ業","生活関連ｻｰﾋﾞｽ","教育学習支援業","医療・福祉","複合ｻｰﾋﾞｽ","ｻｰﾋﾞｽ業","公務"];
+
+            if(poly){maru=poly}else{maru=turf.circle(coord,r/1000)};
+            for(var q=0; q<qbox.length; q++){
+              var differ=turf.difference(qpol[q],maru);
+              var ritu=0;
+              if(differ){ritu=1-turf.area(differ)/turf.area(qpol[q])};
+              if(differ==null && turf.booleanPointInPolygon(qpol[q].geometry.coordinates[0][0],maru)==true){ritu=1};
+              if(ritu!=0){
+                targets.push({geometry:qpol[q].geometry,properties:{number:q}});
+                labe.push({type:'Feature',properties:{label:numeral(ritu).format('0.0%')},geometry:{type:'Point',coordinates:turf.centroid(qpol[q]).geometry.coordinates}});
+                var p=qbox[q];
+                csvd1.push(['\n【2015年】,'+p.pref,p.gstname,p.city,p.sname,p.jinko,numeral(ritu).format('0.000'),numeral(p.jinko*ritu).format('0.0')]);
+                var sn=qbox[q].sname;if(sn.indexOf("大字")==0){sn=sn.substr(2)};
+                if(sn.indexOf("丁目")>0){
+                  var ks=[["一丁目","１丁目"],["二丁目","２丁目"],["三丁目","３丁目"],["四丁目","４丁目"],["五丁目","５丁目"],["六丁目","６丁目"],["七丁目","７丁目"],["八丁目","８丁目"],["九丁目","９丁目"]];
+                  for(var i=0; i<9; i++){if(sn.indexOf(ks[i][0]) > 0){sn=sn.substr(0,sn.indexOf(ks[i][0]))+ks[i][1];break;}};
+                }
+                if(qbox[q].pref != "東京都" && qbox[q].city.indexOf("区")==qbox[q].city.length-1){var addr=qbox[q].gstname+qbox[q].city}else{var addr=qbox[q].pref+qbox[q].city};
+               // console.log(addr);
+                var worker = new XMLHttpRequest();  //国調小地域の住所（町丁字）をキーにworkerを検索
+                worker.open('GET','https://asl-node.azurewebsites.net?work,'+encodeURIComponent(addr+sn), false);
+                worker.onreadystatechange = function(){
+                  if(worker.readyState === 4 && worker.status === 200){
+                    var w=JSON.parse(worker.responseText);
+                    if(w!=""){csvd1.push("【201407】",w[0].total,w[0].A,w[0].C,w[0].D,w[0].E,w[0].F,w[0].G,w[0].H,w[0].I,w[0].J,w[0].K,w[0].L,w[0].M,w[0].N,w[0].O,w[0].P,w[0].Q,w[0].R,w[0].S)};
+                  }
+                }
+                worker.send(null);
+                var id=qbox[q].id;
+                if(id.indexOf('E')>0){id=id.substr(0,id.indexOf('E'))};
+                if(citycd){if(citycd.indexOf(id.substr(0,5))== -1){citycd.push(id.substr(0,5));citynm.push(addr);}
+                  }else{citycd.push(id.substr(0,5));citynm.push(addr);}
+                sumj=sumj+p.jinko*ritu;
+                sums=sums+p.setai*ritu;
+              }
+            }
+            csvdata.push('緯度経度:'+numeral(coord[1]).format('0.000')+' '+numeral(coord[0]).format('0.000')+' エリア内夜間人口 '+Math.round(sumj));
+
+            var citywork=[],zanryu=[];
+            for(var i in citycd){
+              var worker = new XMLHttpRequest();  //国調小地域の住所（市区町村）をキーにworkerを検索
+              worker.open('GET','https://asl-node.azurewebsites.net?work,'+encodeURIComponent(citynm[i]), false);
+              worker.onreadystatechange = function(){
+                if(worker.readyState === 4 && worker.status === 200){
+                  var w=JSON.parse(worker.responseText);
+                  citywork[i]=w[0].total;
+                }
+              }
+              worker.send(null);
+            }
+            csvd2=["\n\n【国調 夜間人口/5歳階級別】","city","夜間人口","昼夜人口比率","流出人口","流入人口","15歳未満","15~64歳","65歳以上","【経済センサス基礎調査】","従業者数",
+                       "【住宅土地統計】","住宅所有(世帯数)","年収100万未満","年収100～200","年収200～300","年収300～400","年収400～500","年収500～700","年収700～1000","年収1000～1500","年収1500万以上"];
+            var estat = new XMLHttpRequest();
+            estat.open('POST','https://api.e-stat.go.jp/rest/2.1/app/json/getStatsDatas?',false);
+            estat.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+            estat.onreadystatechange = function(){
+              if(estat.readyState === 4 && estat.status === 200){
+                var dd=JSON.parse(estat.responseText);
+                for(var i in citycd){
+                  var p1=dd.GET_STATS_DATAS.STATISTICAL_DATA_LIST.DATA_INF_LIST.DATA_INF[i*3].VALUE;
+                  var p2=dd.GET_STATS_DATAS.STATISTICAL_DATA_LIST.DATA_INF_LIST.DATA_INF[i*3+1].VALUE;
+                  var p3=dd.GET_STATS_DATAS.STATISTICAL_DATA_LIST.DATA_INF_LIST.DATA_INF[i*3+2].VALUE;
+                  zanryu[i]=(p1[0].$*p1[16].$/100-citywork[i])/p1[0].$;
+                  csvd2.push(['\n【201510】,'+citynm[i],p1[0].$,p1[16].$,p1[14].$,p1[15].$,p2[1].$,p2[0].$-p2[15].$-p2[18].$,p2[18].$,
+                                "【201407】",citywork[i],
+                                "【201310】",p3[0].$,p3[1].$,p3[2].$,p3[3].$,p3[4].$,p3[5].$,p3[6].$,p3[7].$,p3[8].$,p3[9].$,zanryu[i]]);
+                }
+              }
+            }
+            var para="";
+            for(var i in citycd){
+              para+="{'statsDataId':'0003179301','cdArea':'"+citycd[i]+"','cdCat01':'0000','cdCat03':'0000','cdCat04To':'0160'},"+  //市区町村 夜間人口
+                    "{'statsDataId':'0003179301','cdArea':'"+citycd[i]+"','cdCat01':'0000','cdCat04':'0000'},"+  //市区町村 年齢別人口
+                    //"{'statsDataId':'0003018191','cdArea':'"+citycd[i]+"'},"+  // 消費実態調査200901
+                    "{'statsDataId':'0003100934','cdArea':'"+citycd[i]+"','cdCat02':'00000','cdCat04':'00013'},";  // 住宅土地
+            }
+            estat.send("appId=482eb188ffa06f0ffbd28307baabf2bf3dc1f774&statsDatasSpec=["+para.slice(0,-1)+"]");
+
+            targets.push({geometry:maru.geometry,properties:{number:q}});
+             //targets.push({geometry:turf.circle(coord,0.005,{steps:8}).geometry,properties:{number:0}});
+            map.getSource('pic').setData({type:"FeatureCollection",features:targets});
+            map.getSource('ritutext').setData({type:"FeatureCollection",features:labe});
+
+            csvd3.push(['\n\n【国交省駅別乗降客数】','直線距離(m)','駅名','路線名','運営会社','2013年','2014年','2015年','2016年','2017年','2018年']);
+            var station=map.queryRenderedFeatures({layers:['st1']});    // query station in screen
+            if(station){
+              for(var i=0; i<station.length; i++){
+                var distance = turf.pointToLineDistance(coord, station[i])*1000;
+                var p=station[i].properties;
+                csvd3.push(['\n【2019年】',numeral(distance).format('0'),p.駅名,p.路線名,p.運営会社,p.乗降客数13,p.乗降客数14,p.乗降客数15,p.乗降客数16,p.乗降客数17,p.乗降客数18]);
+              }
+            }
+            var msgs='エリア内の人口 <span style="color:red;">'+numeral(sumj).format('0,0')+'</span>人'
+                      +'</br>世帯数 <span style="color:red;">'+numeral(sums).format('0,0')+'</span>世帯'
+                      +'</br><button id="csvout" style="z-index:10;font-size:11px;">CSV作成</button>';
+            popup2 = new mapboxgl.Popup({closeButton:true,closeOnClick:false,offset:[0,-15]});
+            popup2.setLngLat([coord[0],coord[1]]).setHTML('<div>'+msgs+'</div>').addTo(map);
+
+            document.getElementById("csvout").addEventListener('click', function() {
+              csvdata.push(csvd1,csvd2,csvd3);
+              var bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+              var blob = new Blob([ bom, csvdata ], { "type" : "text/csv" });
+              var downLoadLink = document.createElement("a");
+              downLoadLink.download = numeral(coord[1]).format('0.000')+","+numeral(coord[0]).format('0.000')+".csv";
+              downLoadLink.href=window.URL.createObjectURL(blob);
+              downLoadLink.click();
+
+              var png = document.createElement("a");
+              png.download="map.jpeg";
+              png.href=map.getCanvas().toDataURL("image/jpeg");
+              //png.href=document.querySelector('canvas').toDataURL("image/jpeg");
+              png.click();
+              popup2.remove();
+            });
+          }
+        }
+        xhr.send(null);
+      }; //getjinko
+
+      //draw ================================================================
+      if (window.ontouchstart !== null){
+        var draw=new MapboxDraw({controls: {combine_features:false,uncombine_features:false}});
+        map.addControl(draw);
+        map.on('draw.modechange',mc);
+        map.on('draw.create',drawc);
+        map.on('draw.update',drawc);
+        map.on('draw.delete',drawd);
+      };
+      function drawc(e){
+        if(e.features[0].geometry.type == "Point"){
+          map.getSource('megane').setData({type:"FeatureCollection",features:[{type:'Fuature',geometry:{type:'Point',coordinates:[e.features[0].geometry.coordinates[0],e.features[0].geometry.coordinates[1]]}}]});
+        };
+        if(e.features[0].geometry.type == "Polygon"){
+          var cent=turf.centroid(e.features[0]);
+          var r=0;
+          for(var i=0; i<e.features[0].geometry.coordinates[0].length; i++){
+            var lng=e.features[0].geometry.coordinates[0][i][0];
+            var lat=e.features[0].geometry.coordinates[0][i][1];
+            var rr=Math.round(turf.distance([cent.geometry.coordinates[0],cent.geometry.coordinates[1]],[lng,lat])*1000);
+            if(r<rr){r=rr};
+          }
+          getjinko([cent.geometry.coordinates[0],cent.geometry.coordinates[1]],r,e.features[0]);
+        };
+      };
+      function drawd(e){
+        //if(e.features[0].geometry.type == "Point"){}
+        var targets=[];
+        map.getSource('marul').setData({type:"FeatureCollection",features:targets});
+        map.getSource('kyoritext1').setData({type:"FeatureCollection",features:targets});
+        map.getSource('kyoritext2').setData({type:"FeatureCollection",features:targets});
+      };
+      var p1,r,flg=0;     // simu 2点指示(Line)での人口算出  polygon入力時は各辺の距離
+      function mc(e){
+        if(popup1!=0){popup1.remove(); popup1=0};
+        if(popup2!=0){popup2.remove(); popup2=0};
+        if(e.mode=="draw_line_string"){map.on('mousedown', md);}
+        else{if(e.mode=="draw_polygon"){map.on('draw.create',draw2); map.on('mousedown', md2);}};
+      };
+      function md(e){if(flg==0){p1=e; flg=1; map.on('mousemove',mm);}else{
+        flg=0; map.off('mousemove',mm); map.off('mousedown', md); draw.changeMode('simple_select');
+        map.getSource('megane').setData({type:"FeatureCollection",features:[{type:'Fuature',geometry:{type:'Point',coordinates:[p1.lngLat.lng,p1.lngLat.lat]}}]});
+        getjinko([p1.lngLat.lng,p1.lngLat.lat],r);
+      }};
+      function mm(e){
+        r=Math.round(turf.distance([p1.lngLat.lng,p1.lngLat.lat],[e.lngLat.lng,e.lngLat.lat])*200)*5;
+        map.getSource('kyoritext1').setData({type:"FeatureCollection",features:[{type:'Fuature',properties:{label:r+"m"},geometry:{type:'Point',coordinates:[e.lngLat.lng,e.lngLat.lat]}}]});
+      };
+      var p1,r,labe=[],labe2=[];     // normal drawLine時の距離表示
+      function mc2(e){if(e.mode=="draw_line_string"){map.on('draw.create',draw2);map.on('mousedown', md2);}}; //DrawLineを選択されたら
+      function md2(e){
+        if(labe[0] && p1.lngLat.lng!=e.lngLat.lng){
+          labe[0].geometry.coordinates[0]=p1.lngLat.lng+(e.lngLat.lng-p1.lngLat.lng)/2;
+          labe[0].geometry.coordinates[1]=p1.lngLat.lat+(e.lngLat.lat-p1.lngLat.lat)/2;
+          labe2.push(labe[0]);
+        };
+        map.getSource('kyoritext2').setData({type:"FeatureCollection",features:labe2});
+        p1=e; map.on('mousemove',mm2);
+      };
+      function mm2(e){
+        r=Math.round(turf.distance([p1.lngLat.lng,p1.lngLat.lat],[e.lngLat.lng,e.lngLat.lat])*1000);
+        labe=[];
+        labe.push({type:'Fuature',properties:{label:r+"m"},geometry:{type:'Point',coordinates:[e.lngLat.lng,e.lngLat.lat]}});
+        map.getSource('kyoritext1').setData({type:"FeatureCollection",features:labe});
+      };
+      function draw2(){
+        map.off('mousemove',mm2); map.off('mousedown', md2); labe2=[];
+        map.getSource('kyoritext1').setData({type:"FeatureCollection",features:[{type:'Fuature',properties:{label:""}}]});
+      };
+//****************************
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/pwa/sw.js').then(function(registration) {
+            console.log('ServiceWorker registration ok'); console.log({registration});
+          }, function(err) {
+            console.log('ServiceWorker registration NG ', err);
+          });
+        });
+      }
+    </script>
+  </body>
+</html>
