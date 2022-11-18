@@ -52,5 +52,5 @@ jobs:
         with:
           app-name: 'asl-pwa'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_7A2D8ABE9A77475296AA0370C743E42B }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_4B397464482849F284374C3F8371C42E }}
           package: .
